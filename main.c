@@ -53,7 +53,7 @@ void Voca_write(FILE* fp, struct VOCA *V)
 
 int main(void) {
     struct VOCA V[VOCASIZE];
-
+    int test;
     int i;
     char answer;
 
