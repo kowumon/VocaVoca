@@ -1,89 +1,109 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/* 원하는 날짜의 파일을 읽고 쓰는 프로그램
- * 사용자는 날짜를 입력한다.
- * 사용자가 입력한 날짜가 존재하면 그 파일을 연다.
- * 존재 하지 않으면 파일을 새로 만들겠냐고 물어본다.
- * 물어보면 파일을 쓰는 tool이 시작된다.
- */
-#define VOCASIZE 15
+#define VOCA_SIZE 15
 
-struct VOCA{
-    char word[10];
-    char meanings[10];
-};
+typedef struct VOCA{
+    char *word;
+    char *meanings;
+}Voca;
 
-void die(char *messeage) {
-    if(errno) {
-        perror(messeage);
-    }
-    printf("ERROR: %s", messeage);
-    exit(1);
-}
-
-
-//
-void Voca_write(FILE* fp, struct VOCA *V)
-{
-    int i;
+int Voca_write(Voca *voca, int count) {
+    count = 0;
     char temp[100];
-    int count = 0;
+    int i = 0;
 
     while(1) {
-        printf("Please enter a word to remember\n");
-        scanf(" %s", temp);
-        strcpy(V[count].word , temp);
-
-        printf("Please enter a word-meaning\n");
-        scanf(" %[^\n]", temp);
-        strcpy(V[count].meanings , temp);
-        count++;
-
-        if(count == 3) {
+        printf("Enter word\n");
+        scanf("%s", temp);
+        if( *temp == 'q' )
             break;
-        }
+
+        voca[count].word = malloc(sizeof(strlen(temp) + 1));
+        strcpy(voca[count].word, temp);
+        printf("Enter meanings\n");
+        scanf("%s", temp);
+        voca[count].meanings = malloc(sizeof(strlen(temp) + 1));
+        strcpy(voca[count].meanings, temp);
+
+        count++;
     }
+
 
     for(i = 0; i < count; i++) {
-        fprintf(fp, "%s %s \n", V[i].word, V[i].meanings);
+        printf("%s %s\n", voca[i].word, voca[i].meanings);
     }
 
+    return count;
 }
-
 int main(void) {
-    struct VOCA V[VOCASIZE];
-    int test;
-    int i;
-    char answer;
-
-    char *filename = malloc(sizeof(char)*10);
-    printf("Do you want to open filename?\n");
+    Voca voca[15];
+    int i = 0;
+    int count;
+    char *filename = malloc(sizeof(char) * 10);
+    printf("Enter filename\n");
     scanf("%s", filename);
-
-    //파일이 존재 하는지 안 하는지 판별
     FILE *fp = fopen(filename, "r");
     if(!fp) {
-        printf("Create New file. y/n ? \n");
-        scanf(" %c", &answer);
-        if(answer == 'y') {
-            fp = fopen(filename, "w");
-            Voca_write(fp, V);
+        // 파일이 존재하지 않으면 파일 쓰기
+        count = Voca_write(voca, count);
+        fp = fopen(filename, "w");
 
-
+        for(i = 0; i < count; i++) {
+            fprintf(fp,"%s %s\n", voca[i].word, voca[i].meanings);
         }
 
+        for(i = 0; i < count; i++) {
+            free(voca[i].word);
+            free(voca[i].meanings);
+        }
+
+    } else {// 파일 읽어서 단어연습 시작하기
+        // 파일을 읽어서 파일에 있는 단어 갯수 만큼 출력하기.
+        char c;
+        int r_count = 0;
+
+        while(feof(fp) == 0){
+            c = getc(fp);
+            if(c != EOF) {
+                if(c == '\n') {
+                    r_count = r_count + 1;
+                }
+            }
+        }
+
+        rewind(fp);
+       for(i = 0; i < r_count; i++) {
+           voca[i].word = malloc(sizeof(char) * 10);
+           voca[i].meanings = malloc(sizeof(char) * 10);
+           fscanf(fp, "%s %s\n", voca[i].word, voca[i].meanings);
+       }
+
+        for(i = 0; i < r_count; i++) {
+            printf("%s %s\n", voca[i].word, voca[i].meanings);
+        }
+
+        for(i = 0; i < 5; i++) {
+            free(voca[i].word);
+            free(voca[i].meanings);
+        }
+
+
     }
 
-    // 파일이 존재하면 파일 읽어오기. (
-    for(i = 0; i < VOCASIZE; i++) {
-        fscanf(fp,"%s %s", V[i].word, V[i].meanings);
-    }
-
-    for(i = 0; i < VOCASIZE; i++) {
-        printf("%s %s \n", V[i].word, V[i].meanings);
-    }
-    //GAME START !
-
-
+    fclose(fp);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+   // free(conn);
+
