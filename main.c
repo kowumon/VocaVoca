@@ -6,14 +6,106 @@
 typedef struct VOCA{
     char *word;
     char *meanings;
+    int id;
 }Voca;
 
-void Voca_practice(int count, Voca *voca) {
+void Voca_practice(Voca *voca);
+void Voca_open(FILE *fp, Voca *voca);
+
+
+
+int main(void) {
+    Voca voca[VOCA_SIZE];
+    int i;
+    int count = 0;
+
+    while(1) {
+        char *filename = malloc(sizeof(char) * 10);
+        printf("Enter filename\n");
+        scanf("%s", filename);
+        FILE *fp = fopen(filename, "r");
+        if(strcmp(filename,"done") == 0) {
+            printf("See you again !\n");
+            break;
+        }
+        if(!fp) {
+            // 파일이 존재하지 않으면 파일 쓰기
+            char *s1 = malloc(sizeof(char) * 10);
+            char newline = '\n';
+            printf("Enter write word.\n");
+
+            fp = fopen(filename, "w"); // 파일 쓰기
+            while (1) {
+                scanf(" %[^\n]", s1);
+                if (strcmp(s1, "done") == 0) {
+                    break;
+                }
+                fwrite(s1, strlen(s1), 1, fp);
+                fwrite(&newline, sizeof(newline), 1, fp);
+                count++;
+            }
+            voca->id = count;
+            fseek(fp, 0, SEEK_END);
+            int size = ftell(fp);
+            printf("End of fp : %d\n", size);
+
+        } else {// 파일 읽어서 단어연습 시작하기
+            Voca_open(fp, voca);
+            Voca_practice(voca);
+
+            for(i = 0; i < voca->id; i++) {
+                free(voca[i].word);
+                free(voca[i].meanings);
+            }
+        }
+        fclose(fp);
+    }
+
+}
+
+void Voca_open(FILE *fp, Voca *voca) {
+    int i;
+    int count = 0;
+    rewind(fp);
+
+    while(1) { // 한번 더 저장을 받지 않아야 한다.('\n')
+        if(feof(fp) == 0) {
+            break;
+        }
+        char temp[100];
+        char temp1[100];
+
+        fscanf(fp, "%s %[^\n]", temp, temp1);
+        voca[count].word = malloc(sizeof(strlen(temp)+ 1));
+        voca[count].meanings = malloc(sizeof(strlen(temp1)+ 1));
+        strcpy(voca[count].word, temp);
+        strcpy(voca[count].meanings, temp1);
+
+        if(fgetc(fp) == '\n') {
+            printf("This is \\n.\n");
+            count++;
+        }
+
+    }
+    printf("count : %d", count);
+
+    for(i = 0; i < count; i++) {
+        printf("%s %s\n", voca[i].word, voca[i].meanings);
+    }
+
+    voca->id = count;
+}
+
+void Voca_practice(Voca *voca) {
+    int count = voca->id;
     char temp[100];
     char *user_input;
-    int wrongNum = 0;
-    int check = 0;
     int i,j;
+    char *wrongArray[10];
+    int wrongNum = 0;
+    int index = 0;
+
+
 
     printf("START GAME!\n");
     int wrongSum = 0;
@@ -27,137 +119,29 @@ void Voca_practice(int count, Voca *voca) {
             if(user_input[j] != voca[i].word[j]) {
                 ++wrongNum;
             }
-            if(user_input[j] == '\0' && wrongNum != check ) {
+            if(user_input[j] == '\0' && wrongNum != 0) {
                 wrongSum = wrongSum + 1;
+                wrongArray[index] = malloc(sizeof(strlen(voca[i].word)));
+                strcpy(wrongArray[index], voca[i].word);
+                index++;
                 wrongNum = 0;
             }
         }
+
         free(user_input);
     }
 
-    printf("You are wrong. %d", wrongSum);
-
-}
-int Voca_write(Voca *voca, int count) {
-    count = 0;
-    char temp[100];
-    int i = 0;
-
-    while(1) {
-        printf("Enter word\n");
-        scanf("%s", temp); // 단어 입력하기
-        if( *temp == 'q' )
-            break;
-        voca[count].word = malloc(sizeof(strlen(temp) + 1));
-        strcpy(voca[count].word, temp);
-        printf("Enter meanings\n");
-        scanf(" %[^\n]", temp); // 의미 입력하기
-        voca[count].meanings = malloc(sizeof(strlen(temp) + 1));
-        strcpy(voca[count].meanings, temp);
-
-        count++;
+    //틀린 문자와 숫자를 출력하기.
+    printf("You are wrong: %d\n", wrongSum);
+    printf("You are wrong: ");
+    for(i = 0; i < wrongSum; i++) {
+        printf("%s ", wrongArray[i]);
+        free(wrongArray[i]);
     }
-
-    for(i = 0; i < count; i++) {
-        printf("%s %s\n", voca[i].word, voca[i].meanings);
-    }
-
-    return count;
-}
-
-
-int Voca_open(FILE *fp, Voca *voca, int re_count) {
-    re_count = 0;
-    char ch;
-    int i;
-
-    //전체 파일 단어 갯수 알기(re_count)
-    while(feof(fp) == 0){
-        ch = getc(fp);
-        if(ch != EOF) {
-            if(ch == '\n') {
-                re_count = re_count + 1;
-            }
-        }
-    }
-    rewind(fp);
-
-    for(i = 0; i < re_count; i++) {
-        char temp[100];
-        char temp1[100];
-
-        fscanf(fp, "%s %s", temp, temp1);
-        voca[i].word = malloc(sizeof(char) * 10);
-        voca[i].meanings = malloc(sizeof(char) * 10);
-        strcpy(voca[i].word, temp);
-        strcpy(voca[i].meanings, temp1);
-    }
-
-    for(i = 0; i < re_count; i++) {
-        printf("%s %s\n", voca[i].word, voca[i].meanings);
-    }
-
-    return re_count;
-}
-
-int main(void) {
-    Voca voca[15];
-    int i;
-    int count;
-    int re_count;
-    char answer;
-
-    char *filename = malloc(sizeof(char) * 10);
-    printf("Enter filename\n");
-    scanf("%s", filename);
-    FILE *fp = fopen(filename, "r");
-    if(!fp) {
-        // 파일이 존재하지 않으면 파일 쓰기
-        count = Voca_write(voca, count);
-        fp = fopen(filename, "w");
-
-        for(i = 0; i < count; i++) {
-            fprintf(fp,"%s %s\n", voca[i].word, voca[i].meanings);
-        }
-
-        printf("Do you want to game? y/n \n");
-        scanf(" %c", &answer);
-        if(answer == 'y') {
-            Voca_practice(count, voca);
-        } else {
-          printf("See you again!\n");
-        }
-
-        for(i = 0; i < count; i++) {
-            free(voca[i].word);
-            free(voca[i].meanings);
-        }
-
-    } else {// 파일 읽어서 단어연습 시작하기
-        // 파일을 읽어서 파일에 있는 단어 갯수 만큼 출력하기.
-        re_count = Voca_open(fp,voca,re_count);
-        Voca_practice(re_count, voca);
-
-        for(i = 0; i < 5; i++) {
-            free(voca[i].word);
-            free(voca[i].meanings);
-        }
-
-    }
-
-    fclose(fp);
+    printf("\n");
 }
 
 
 
 
-
-
-
-
-
-
-
-
-   // free(conn);
 
