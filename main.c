@@ -8,18 +8,16 @@ typedef struct VOCA{
     char *meanings;
     int id;
 }Voca;
-
+Voca voca[VOCA_SIZE];
 void Voca_practice(Voca *voca);
 void Voca_open(FILE *fp, Voca *voca);
 
 
-
 int main(void) {
-    Voca voca[VOCA_SIZE];
     int i;
     int count = 0;
 
-    while(1) {
+    while(1) { // 파일이름을 계속해서 묻는다.
         char *filename = malloc(sizeof(char) * 10);
         printf("Enter filename\n");
         scanf("%s", filename);
@@ -66,27 +64,26 @@ int main(void) {
 void Voca_open(FILE *fp, Voca *voca) {
     int i;
     int count = 0;
-    rewind(fp);
+    char temp[100];
+    char temp1[100];
 
-    while(1) { // 한번 더 저장을 받지 않아야 한다.('\n')
-        if(feof(fp) == 0) {
-            break;
-        }
-        char temp[100];
-        char temp1[100];
-
-        fscanf(fp, "%s %[^\n]", temp, temp1);
-        voca[count].word = malloc(sizeof(strlen(temp)+ 1));
-        voca[count].meanings = malloc(sizeof(strlen(temp1)+ 1));
-        strcpy(voca[count].word, temp);
-        strcpy(voca[count].meanings, temp1);
-
+    while(feof(fp) == 0) {
         if(fgetc(fp) == '\n') {
             printf("This is \\n.\n");
             count++;
         }
-
     }
+
+    rewind(fp);
+
+    for(i = 0; i < count; i++) {
+        fscanf(fp, "%s %[^\n]", temp, temp1);
+        voca[i].word = malloc(sizeof(strlen(temp)+ 1));
+        voca[i].meanings = malloc(sizeof(strlen(temp1)+ 1));
+        strcpy(voca[i].word, temp);
+        strcpy(voca[i].meanings, temp1);
+    }
+
     printf("count : %d", count);
 
     for(i = 0; i < count; i++) {
@@ -104,8 +101,6 @@ void Voca_practice(Voca *voca) {
     char *wrongArray[10];
     int wrongNum = 0;
     int index = 0;
-
-
 
     printf("START GAME!\n");
     int wrongSum = 0;
@@ -140,8 +135,3 @@ void Voca_practice(Voca *voca) {
     }
     printf("\n");
 }
-
-
-
-
-
